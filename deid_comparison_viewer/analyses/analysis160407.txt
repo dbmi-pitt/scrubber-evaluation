@@ -1,0 +1,53 @@
+Deid redactions number = 8534
+Nlm redactions number = 17163
+True positives = 5207.0
+False positives = 11956.0
+False negatives = 3327.0
+Precision = 0.30338518906951
+Recall = 0.6101476447152566
+	Missed report00001:   2036:   2052 ==> annotationKind=**NAME[XXX WWW],sPos=2036,ePos=2052,spannedText=Woody Woodpecker]
+	Missed report00046:   1471:   1484 ==> annotationKind=**PLACE,sPos=1471,ePos=1484,spannedText=Smurf Village]
+	Missed report00082:   3209:   3220 ==> annotationKind=**NAME[AAA BBB],sPos=3209,ePos=3220,spannedText=Dizzy Devil]
+	Missed report00095:    154:    167 ==> annotationKind=**DATE[Dec 2011],sPos=154,ePos=167,spannedText=November 2011]
+	Missed report00125:   1212:   1222 ==> annotationKind=**DATE[Oct 22 2011],sPos=1212,ePos=1222,spannedText=09/22/2011]
+	Missed report00150:    113:    117 ==> annotationKind=**NAME[XXX],sPos=113,ePos=117,spannedText=Road]
+	Missed report00178:   2137:   2140 ==> annotationKind=**NAME[ZZZ],sPos=2137,ePos=2140,spannedText=oad]
+	Missed report00216:   2883:   2893 ==> annotationKind=**DATE[Sep 10 2010],sPos=2883,ePos=2893,spannedText=08/10/2010]
+	Missed report00251:  12970:  12976 ==> annotationKind=**NAME[TTT],sPos=12970,ePos=12976,spannedText=Beagle]
+	Missed report00273:   1096:   1106 ==> annotationKind=**DATE[Jan 02 2012],sPos=1096,ePos=1106,spannedText=12/02/2011]
+	Missed report00299:    622:    634 ==> annotationKind=**NAME[ZZZ YYY],sPos=622,ePos=634,spannedText=Wally Walrus]
+	Missed report00330:   1363:   1380 ==> annotationKind=***PATH-NUMBER[1],sPos=1363,ePos=1380,spannedText=***PATH-NUMBER[1]]
+	Missed report00347:   1248:   1261 ==> annotationKind=**PLACE,sPos=1248,ePos=1261,spannedText=Smurf Village]
+	Missed report00372:   3296:   3313 ==> annotationKind=***PATH-NUMBER[1],sPos=3296,ePos=3313,spannedText=***PATH-NUMBER[1]]
+	Missed report00430:     57:     70 ==> annotationKind=**PLACE,sPos=57,ePos=70,spannedText=Smurf Village]
+	Missed report00454:    271:    273 ==> annotationKind=**AGE[in 50s],sPos=271,ePos=273,spannedText=58]
+	Missed report00480:    211:    226 ==> annotationKind=**NAME[AAA BBB],sPos=211,ePos=226,spannedText=Skipper Penguin]
+	Missed report00526:    112:    114 ==> annotationKind=**AGE[in 80s],sPos=112,ePos=114,spannedText=81]
+	Missed report00541:    270:    272 ==> annotationKind=**AGE[in 80s],sPos=270,ePos=272,spannedText=81]
+	Missed report00562:    200:    217 ==> annotationKind=**NAME[ZZZ YYY],sPos=200,ePos=217,spannedText=Penelope Pussycat]
+	Missed report00582:     92:     94 ==> annotationKind=**AGE[in 50s],sPos=92,ePos=94,spannedText=56]
+	Missed report00612:   3417:   3429 ==> annotationKind=**NAME[XXX WWW],sPos=3417,ePos=3429,spannedText=Wally Walrus]
+	Missed report00636:   1537:   1550 ==> annotationKind=**NAME[ZZZ],sPos=1537,ePos=1550,spannedText=Snuffleupagus]
+	Missed report00706:   3437:   3450 ==> annotationKind=**PLACE,sPos=3437,ePos=3450,spannedText=Smurf Village]
+	Missed report00737:    312:    314 ==> annotationKind=**AGE[in 40s],sPos=312,ePos=314,spannedText=42]
+	Missed report00777:   3682:   3688 ==> annotationKind=**NAME[WWW],sPos=3682,ePos=3688,spannedText=Piglet]
+	Missed report00806:   2064:   2077 ==> annotationKind=**PLACE,sPos=2064,ePos=2077,spannedText=Smurf Village]
+	Missed report00835:   2190:   2202 ==> annotationKind=**NAME[XXX WWW],sPos=2190,ePos=2202,spannedText=Wally Walrus]
+	Missed report00904:    254:    262 ==> annotationKind=**NAME[YYY XXX],sPos=254,ePos=262,spannedText=Big Bird]
+	Missed report00929:   1187:   1199 ==> annotationKind=**NAME[ZZZ YYY],sPos=1187,ePos=1199,spannedText=Wally Walrus]
+	Missed report00945:   2804:   2829 ==> annotationKind=**NAME[AAA: BBB CCC],sPos=2804,ePos=2829,spannedText=Grinch: Acme Looniversity]
+	Missed report00984:   3614:   3619 ==> annotationKind=**NAME[YYY],sPos=3614,ePos=3619,spannedText=Dumbo]
+	Missed report01009:     98:    100 ==> annotationKind=**AGE[in 30s],sPos=98,ePos=100,spannedText=34]
+	Missed report01030:    383:    393 ==> annotationKind=**DATE[Oct 06 2012],sPos=383,ePos=393,spannedText=08/06/2012]
+
+DISCUSSION:
+
+The misses are caused by NLM 
+
+1) not picking up full names
+2) missing places
+3) failed on November 2011 (which might be a HIPAA interpretation issue)
+4) Age[in 30s] conversion not happening with NLM.  (again could be HIPPA interpretatio)
+
+
+More analysis is needed.
