@@ -51,8 +51,10 @@ import javax.swing.JPanel;
  */
 public class ExplanationMgrStarter {
 	static JFrame frame;
-	static String[] names = { "Arlo", "Cosmo", "Elmo", "Hugo", "Jethro", "Laszlo", "Milo", "Nemo", "Otto", "Ringo",
-			"Rocco", "Rollo" };
+	static Explanation[] names = { new Explanation("Arlo", "Cosmo"), 
+			new Explanation("Elmo", "Hugo"), new Explanation("Jethro", "Laszlo"), new Explanation("Milo", "Nemo"),
+			new Explanation("Otto", "Ringo"),
+			new Explanation("Rocco", "Rollo") };
 	
 
 	public static void main(String[] args) {
@@ -88,7 +90,7 @@ public class ExplanationMgrStarter {
 	public static JPanel createUI() {
 		// Create the labels.
 		JLabel intro = new JLabel("The chosen name:");
-		final JLabel name = new JLabel(names[1]);
+		final JLabel name = new JLabel(names[1].getHeader());
 		intro.setLabelFor(name);
 
 		// Use a wacky font if it exists. If not, this falls
@@ -96,12 +98,12 @@ public class ExplanationMgrStarter {
 		name.setFont(getAFont());
 
 		// Create the button.
-		final JButton button = new JButton("Pick a new name...");
+		final JButton button = new JButton("View Explanation Dialog...");
 		button.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				String selectedName = ExplanationMgrDialog.showDialog(frame, button, "Baby names ending in O:",
-						"Name Chooser", names, name.getText(), "Cosmo  ");
-				name.setText(selectedName);
+				Explanation selectedName = ExplanationMgrDialog.showDialog(frame, button, "Explanation for inaccuracy:",
+						"Explanation Chooser", names, names[0],  names[0]);
+				name.setText(selectedName.getHeader());
 			}
 		});
 

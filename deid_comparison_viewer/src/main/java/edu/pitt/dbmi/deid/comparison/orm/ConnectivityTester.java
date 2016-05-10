@@ -54,7 +54,8 @@ public class ConnectivityTester {
 			String pvtSql = "SELECT uuid FROM ident_document where application_status = 'IDLING' limit 50";
 			PreparedStatement pStmt = pvtDbConnection.prepareStatement(pvtSql);
 
- 	
+			pStmt.executeQuery();
+			
  			pubDbConnection.close();
  			pvtDbConnection.close();
  			

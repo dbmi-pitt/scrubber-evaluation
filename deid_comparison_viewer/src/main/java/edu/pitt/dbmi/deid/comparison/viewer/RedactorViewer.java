@@ -55,8 +55,6 @@ public class RedactorViewer extends JFrame implements ActionListener, ListSelect
 	private int hilitedAnnotationPos = -1;
 	private String hilitedUnderLyingText = "";
 	
-	private Color[] colorArray;
-
 	private static void createAndShowGUI() {
 		new RedactorViewer("Redactor Viewer");
 	}
@@ -281,7 +279,7 @@ public class RedactorViewer extends JFrame implements ActionListener, ListSelect
 		merger.setContentOne(redactorNlm.getRedactedPhi());
 		merger.setContentTwo(redactorDeid.getRedactedPhi());
 		merger.merge();
-		colorArray = merger.getColorArray();
+		merger.getColorArray();
 		contentPhi = merger.getContentMerged();
 		
 		final TreeSet<Annotation> sortedAnnotations = new TreeSet<Annotation>(new Comparator<Annotation>(){
@@ -352,6 +350,7 @@ public class RedactorViewer extends JFrame implements ActionListener, ListSelect
 		}
 	}
 	
+	@SuppressWarnings("unused")
 	private void annotateText(JTextPane textPane, int sPos, String underLyingText, Color[] colorArray,
 			boolean isBold) {
 		try {

@@ -1,12 +1,14 @@
 package edu.pitt.dbmi.deid.comparison.explanation;
 
+import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.BorderFactory;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JPanel;
 
@@ -14,31 +16,33 @@ public class HomogenousButtonPanel extends JPanel {
 
 	private static final long serialVersionUID = 1L;
 
+	private GridBagConstraints gbc = new GridBagConstraints();
 	private final List<JButton> buttons = new ArrayList<JButton>();
 	private double preferredWidth = 0.0d;
 	private double preferredHeight = 0.0d;
 
 	public HomogenousButtonPanel() {
+		setBorder(BorderFactory.createLineBorder(Color.black, 2));
+		GridBagLayout gridBagLayout = new GridBagLayout();
+		setLayout(gridBagLayout);
 	}
 
 	public void layoutButtons() {
 		adjustPreferredWidthToMax();
-		setLayout(new BoxLayout(this, BoxLayout.LINE_AXIS));
-		setBorder(BorderFactory.createEmptyBorder(0, 20, 10, 20));
-		add(Box.createHorizontalGlue());
-		for (int idx = 0; idx < buttons.size(); idx++) {
-			add(buttons.get(idx));
-			add(Box.createRigidArea(new Dimension(10, 0)));
+		gbc.anchor = GridBagConstraints.CENTER;
+		gbc.fill = GridBagConstraints.NONE;
+		gbc.gridheight = 1;
+		gbc.gridwidth = 1;
+		gbc.gridy = 1;
+		gbc.insets = new Insets(0,0,0,0);
+		gbc.ipadx = 0;
+		gbc.ipady = 0;
+		gbc.weightx = 1.0d / ((double) buttons.size());
+		gbc.weighty = 1.0;
+		for (int idx = 1; idx <= buttons.size(); idx++) {
+			gbc.gridx = idx;
+			add(buttons.get(idx-1), gbc);
 		}
-
-		// setLayout(new GridBagLayout());
-		// GridBagConstraints gbc = new GridBagConstraints();
-		// gbc.weightx = 1.0d / buttons.size();
-		// gbc.weighty = 1.0d;
-		// gbc.fill = GridBagConstraints.HORIZONTAL;
-		// gbc.ipadx = 5;
-		// gbc.insets = new Insets(5, 5, 5, 5);
-
 	}
 
 	public void addButton(JButton aButton) {
@@ -50,6 +54,7 @@ public class HomogenousButtonPanel extends JPanel {
 		for (JButton aButton : buttons) {
 			if (aButton.getPreferredSize().getWidth() > preferredWidth) {
 				preferredWidth = aButton.getPreferredSize().getWidth();
+				preferredHeight = aButton.getPreferredSize().getHeight();
 			}
 		}
 	}
