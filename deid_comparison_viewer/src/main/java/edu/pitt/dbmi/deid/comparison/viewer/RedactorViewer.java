@@ -6,11 +6,15 @@ import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Comparator;
 import java.util.TreeSet;
 import java.util.regex.Pattern;
@@ -19,6 +23,7 @@ import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.JSplitPane;
 import javax.swing.JTable;
 import javax.swing.JTextPane;
 import javax.swing.ListSelectionModel;
@@ -34,10 +39,14 @@ import org.apache.commons.lang.StringUtils;
 
 import edu.pitt.dbmi.deid.comparison.annotator.Annotation;
 import edu.pitt.dbmi.deid.comparison.annotator.RedactorUtf8;
+import edu.pitt.dbmi.deid.comparison.explanation.ExplanationMgrDialog;
 
 public class RedactorViewer extends JFrame implements ActionListener, ListSelectionListener {
 
 	private static final long serialVersionUID = 1L;
+	
+//	private static final String NLM_VERSION = "nlm160405";
+	private static final String NLM_VERSION = "nlm160518";
 	
 	public static void main(String[] args) {
 		javax.swing.SwingUtilities.invokeLater(new Runnable() {
@@ -47,7 +56,7 @@ public class RedactorViewer extends JFrame implements ActionListener, ListSelect
 		});
 	}
 
-	private JPanel mainPanel = null;
+	private JPanel noteViewerPanel = null;
 	private int currentNoteNameIndex = -1;
 	
 	private int currentAnnotationIndex = -1;
@@ -59,6 +68,7 @@ public class RedactorViewer extends JFrame implements ActionListener, ListSelect
 		new RedactorViewer("Redactor Viewer");
 	}
 
+	private JSplitPane mainSplitPane;
 	private WindowAdapter windowAdapter;
 	private JTable noteNameTable;
 	private JScrollPane noteNameTableScrollPane;
@@ -74,23 +84,53 @@ public class RedactorViewer extends JFrame implements ActionListener, ListSelect
 	
 	private JScrollPane scrollerPhi = new JScrollPane(viewerPhi);
 	
+	private ExplanationData explanationData = null;
+	
 	public RedactorViewer(String title) {
 		super(title);
 		setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 		establishWindowControls();
 		buildNlmAnnotationAttributes();
-		buildMainPanel();
-		getContentPane().add(mainPanel, BorderLayout.CENTER);
+		buildMainSplitPane();
+		getContentPane().add(mainSplitPane, BorderLayout.CENTER);
 		pack();
 		setLocationRelativeTo(null);
 		setVisible(true);
 	}
 
-	private void buildMainPanel() {
+	private void buildMainSplitPane() {
 		
-		mainPanel = new JPanel();
-		mainPanel.setLayout(new GridBagLayout());
-		mainPanel.setPreferredSize(new Dimension(1500, 900));
+		mainSplitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
+	
+		/*
+		 * Notes Viewer is the Left of SplitPane
+		 */
+		buildNoteViewerPanel();
+		noteViewerPanel.setPreferredSize(new Dimension(750, 900));
+		mainSplitPane.setLeftComponent(noteViewerPanel);
+		
+//		gbc.gridx = 2;
+//		gbc.anchor = GridBagConstraints.WEST;
+//		gbc.weightx = .3;
+		
+		/*
+		 * Annotation Viewer is the Right of SplitPane
+		 */
+		buildAnnotationScrollableTable();
+		annotationTableScrollPane.setPreferredSize(new Dimension(750, 900));
+		mainSplitPane.setRightComponent(annotationTableScrollPane);
+		
+		mainSplitPane.setDividerLocation(0.5);
+		mainSplitPane.setResizeWeight(0.5);
+		
+		
+		
+	}
+	
+	private void buildNoteViewerPanel() {
+		noteViewerPanel = new JPanel();
+		
+		noteViewerPanel.setLayout(new GridBagLayout());
 		
 		buildNoteNameScrollableTable();
 
@@ -107,13 +147,11 @@ public class RedactorViewer extends JFrame implements ActionListener, ListSelect
 		gbc.ipady = 0;
 		gbc.insets = new Insets(0,0,0,0);
 		
-		mainPanel.add(noteNameTableScrollPane, gbc);
+		noteViewerPanel.add(noteNameTableScrollPane, gbc);
 		
 		viewerPhi = new JTextPane();
 		viewerPhi.setText(contentPhi);
-		
-		scrollerPhi = new JScrollPane();
-	
+		scrollerPhi = new JScrollPane();	
 		scrollerPhi.getViewport().add(viewerPhi);
 		
 		gbc.gridx = 1;
@@ -126,16 +164,7 @@ public class RedactorViewer extends JFrame implements ActionListener, ListSelect
 		gbc.insets = new Insets(insetAllDimensions,insetAllDimensions,
 				insetAllDimensions,insetAllDimensions);
 		
-		mainPanel.add(scrollerPhi, gbc);
-		
-		gbc.gridx = 2;
-		gbc.anchor = GridBagConstraints.WEST;
-		gbc.weightx = .3;
-		
-		buildAnnotationScrollableTable();
-		
-		mainPanel.add(annotationTableScrollPane, gbc);
-		
+		noteViewerPanel.add(scrollerPhi, gbc);
 	}
 	
 	private void buildNoteNameScrollableTable() {
@@ -160,10 +189,48 @@ public class RedactorViewer extends JFrame implements ActionListener, ListSelect
 			}
 		}
 		annotationTable = new JTable(dataValues, columnNames);
-		annotationTable.getSelectionModel().addListSelectionListener(this);
+//		annotationTable.getSelectionModel().addListSelectionListener(this);
+		
+		MouseAdapter mouseAdapter = new MouseAdapter() {
+		    public void mousePressed(MouseEvent me) {
+		        JTable table =(JTable) me.getSource();
+		        Point p = me.getPoint();
+		        int row = table.rowAtPoint(p);
+		        if (me.getClickCount() == 1) {
+		        	processChangedAnnotation(row);
+		        }
+		        else if (me.getClickCount() == 2) {
+		            processDisplayExplanationsDialog(row);
+		        }
+		    }			
+		};
+		annotationTable.addMouseListener(mouseAdapter);
 		annotationTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);    
 		annotationTableScrollPane = new JScrollPane(annotationTable);
 		annotationTableScrollPane.setPreferredSize(new Dimension(75,900));	
+	}
+	
+	private void processDisplayExplanationsDialog(int row) {	
+		if (explanationData == null) {
+			initializeExplanationData();
+		}
+		Annotation annotation = deriveAnnotationFromSelections(row);
+		annotation = explanationData.materializeAnnotation(annotation);
+		final boolean isModel = true;
+		final ExplanationMgrDialog dialog = new ExplanationMgrDialog(this, "Scrubber Evaluation Explanation Dialog", isModel, explanationData);
+		dialog.setCurrentAnnotation(annotation);
+		dialog.setSize(new Dimension(1200,900));
+		dialog.setLocationRelativeTo(this);
+		dialog.setVisible(true);		
+	}
+
+	private void initializeExplanationData() {
+		explanationData = new ExplanationData();
+		try {
+			explanationData.initialize();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 	private String buildReportNameFromIndex(int rdx) {
@@ -203,15 +270,8 @@ public class RedactorViewer extends JFrame implements ActionListener, ListSelect
 	}
 
 	private void processChangedAnnotation(int annotationIndex) {
-		System.out.println("Changing annotation to " + annotationIndex);
 		currentAnnotationIndex = annotationIndex;
-		Annotation annotation = new Annotation();
-		
-		annotation.setsPos((new Long((String)annotationTable.getModel().getValueAt(annotationIndex, 0))).longValue());
-		annotation.setePos((new Long((String)annotationTable.getModel().getValueAt(annotationIndex, 1))).longValue());
-		annotation.setRedactor((String) annotationTable.getModel().getValueAt(annotationIndex, 2));
-		annotation.setAnnotationKind((String) annotationTable.getModel().getValueAt(annotationIndex, 3));
-		annotation.setSpannedText((String) annotationTable.getModel().getValueAt(annotationIndex, 4));
+		Annotation annotation = deriveAnnotationFromSelections(annotationIndex);
 		if (annotation.getAnnotationKind() != null && annotation.getAnnotationKind().length() > 0) {
 			if (hilitedAnnotationPos >= 0 && hilitedUnderLyingText != null) {	
 				boolean isBold = false;
@@ -229,8 +289,20 @@ public class RedactorViewer extends JFrame implements ActionListener, ListSelect
 			viewerPhi.setCaretPosition(sPos);
 		}
 	}
-
-
+	
+	private Annotation deriveAnnotationFromSelections(int annotationIndex) {
+		Annotation annotation = new Annotation();
+		int selectedReportIdx = noteNameTable.getSelectedRow();
+		String reportName = (String) noteNameTable.getModel().getValueAt(selectedReportIdx, 0);
+		reportName = StringUtils.substringBefore(reportName, ".txt");
+		annotation.setReport(reportName);
+		annotation.setsPos((new Long((String)annotationTable.getModel().getValueAt(annotationIndex, 0))).longValue());
+		annotation.setePos((new Long((String)annotationTable.getModel().getValueAt(annotationIndex, 1))).longValue());
+		annotation.setRedactor((String) annotationTable.getModel().getValueAt(annotationIndex, 2));
+		annotation.setAnnotationKind((String) annotationTable.getModel().getValueAt(annotationIndex, 3));
+		annotation.setSpannedText((String) annotationTable.getModel().getValueAt(annotationIndex, 4));
+		return annotation;
+	}
 
 	private void processNoteNameSelection(ListSelectionEvent e) throws IOException {
 		if (e.getValueIsAdjusting()) {
@@ -251,9 +323,9 @@ public class RedactorViewer extends JFrame implements ActionListener, ListSelect
 		String reportBaseName = buildReportNameFromIndex(currentNoteNameIndex);
 		String fileNamePhi = "cartoon/" + reportBaseName;
 		String fileNameDeid = "deid/" + reportBaseName;
-		String fileNameNlm = "nlm160405/" + reportBaseName.replaceAll("\\.txt", ".nphi.txt");
-		
-		contentPhi = IOUtils.toString(getClass().getResourceAsStream(fileNamePhi), "UTF-8");
+		String fileNameNlm = NLM_VERSION + "/" + reportBaseName.replaceAll("\\.txt", ".nphi.txt");
+		InputStream inStream = getClass().getResourceAsStream(fileNamePhi);
+		contentPhi = IOUtils.toString(inStream, "UTF-8");
 		contentDeid = IOUtils.toString(getClass().getResourceAsStream(fileNameDeid), "UTF-8");
 		contentNlm = IOUtils.toString(getClass().getResourceAsStream(fileNameNlm), "UTF-8");
 		
@@ -275,12 +347,14 @@ public class RedactorViewer extends JFrame implements ActionListener, ListSelect
 		redactorDeid.setScrubbedContent(contentDeid);
 		redactorDeid.execute();
 		
-		RedactedContentMerger merger = new RedactedContentMerger();
-		merger.setContentOne(redactorNlm.getRedactedPhi());
-		merger.setContentTwo(redactorDeid.getRedactedPhi());
-		merger.merge();
-		merger.getColorArray();
-		contentPhi = merger.getContentMerged();
+		contentPhi = redactorNlm.getRedactedPhi();
+		
+//		RedactedContentMerger merger = new RedactedContentMerger();
+//		merger.setContentOne(redactorNlm.getRedactedPhi());
+//		merger.setContentTwo(redactorDeid.getRedactedPhi());
+//		merger.merge();
+//		merger.getColorArray();
+//		contentPhi = merger.getContentMerged();
 		
 		final TreeSet<Annotation> sortedAnnotations = new TreeSet<Annotation>(new Comparator<Annotation>(){
 			@Override
@@ -321,7 +395,7 @@ public class RedactorViewer extends JFrame implements ActionListener, ListSelect
 		scrollerPhi.getViewport().add(viewerPhi);
 		viewerPhi.setCaretPosition(0);
 		
-		mainPanel.repaint();
+		noteViewerPanel.repaint();
 	}
 	
 	private void buildNlmAnnotationAttributes() {
@@ -365,8 +439,7 @@ public class RedactorViewer extends JFrame implements ActionListener, ListSelect
 			}
 		} catch (BadLocationException e) {
 			e.printStackTrace();
-		}
-		
+		}	
 	}
 
 	private void establishWindowControls() {
@@ -386,11 +459,23 @@ public class RedactorViewer extends JFrame implements ActionListener, ListSelect
 			@Override
 			public void windowClosed(WindowEvent e) {
 				super.windowClosed(e);
+				processExplanationSaveState();
 				System.exit(0);
-			}
+			}	
 		};
 
 		addWindowListener(windowAdapter);
+	}
+	
+	private void processExplanationSaveState() {
+		try {
+			if (RedactorViewer.this.explanationData != null) {
+				RedactorViewer.this.explanationData.saveState();
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
 	}
 
 }

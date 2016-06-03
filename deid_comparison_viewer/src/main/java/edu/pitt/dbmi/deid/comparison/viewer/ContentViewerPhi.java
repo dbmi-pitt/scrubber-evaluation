@@ -18,6 +18,7 @@ public class ContentViewerPhi extends ContentViewer {
 	@Override
 	public void annotate() {
 		CartoonAnnotator cartoonAnnotator = new CartoonAnnotator();
+		cartoonAnnotator.setReportBaseName(getReportBaseName());
 		cartoonAnnotator.annotate(content);
 		for (Annotation cartoonAnnotation : cartoonAnnotator.getAnnotations()) {
 			int sPos = (new Integer(cartoonAnnotation.getsPos()+"")).intValue();

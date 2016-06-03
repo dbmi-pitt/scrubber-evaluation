@@ -15,6 +15,7 @@ public class CartoonAnnotator {
 	
 	private Pattern pattern;
 	private Matcher matcher;
+	private String reportBaseName;
 
 	public static void main(String[] args) {
 		CartoonAnnotator cartoonAnnotator = new CartoonAnnotator();
@@ -37,6 +38,7 @@ public class CartoonAnnotator {
 		matcher = pattern.matcher(content);
 		while (matcher.find()) {
 			Annotation annotation = new Annotation();
+			annotation.setReport(getReportBaseName());
 			annotation.setAnnotationKind("Cartoon");
 			annotation.setsPos((long)matcher.start());
 			annotation.setePos((long)matcher.end());
@@ -64,6 +66,14 @@ public class CartoonAnnotator {
 		patternFlags |= Pattern.MULTILINE;
 		pattern = Pattern.compile(sb.toString(),patternFlags);
 		
+	}
+
+	public String getReportBaseName() {
+		return reportBaseName;
+	}
+
+	public void setReportBaseName(String reportBaseName) {
+		this.reportBaseName = reportBaseName;
 	}
 
 	public List<Annotation> getAnnotations() {

@@ -17,6 +17,9 @@ import edu.pitt.dbmi.deid.comparison.annotator.RedactorUtf8;
 import edu.pitt.dbmi.deid.comparison.viewer.ContentViewer;
 
 public class ComparisonCalculator {
+	
+//	private static final String NLM_VERSION = "nlm160405";
+	private static final String NLM_VERSION = "nlm160518";
 
 	private final HashMap<String, Annotation> deidAnnotationMap = new HashMap<String, Annotation>();
 	private final HashSet<String> deidAnnotations = new HashSet<String>();
@@ -94,7 +97,7 @@ public class ComparisonCalculator {
 			deidReportName = "deid" + File.separator + deidReportName;
 
 			String nlmReportName = "report" + reportBaseNumber + ".nphi.txt";
-			nlmReportName = "nlm160405" + File.separator + nlmReportName;
+			nlmReportName = NLM_VERSION + File.separator + nlmReportName;
 
 			StringBuilder sb = new StringBuilder();
 			sb.append(reportBaseNumber + ":\n");

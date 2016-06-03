@@ -190,7 +190,6 @@ public class ContentComparisonViewer extends JFrame implements ActionListener, L
 		for (ContentViewer viewer : viewers) {
 			viewer.setReportBaseName(reportBaseName);
 			viewer.refreshSelection();
-			
 		}
 		
 		

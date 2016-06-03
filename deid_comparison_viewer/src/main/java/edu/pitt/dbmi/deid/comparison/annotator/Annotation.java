@@ -2,13 +2,18 @@ package edu.pitt.dbmi.deid.comparison.annotator;
 
 import org.apache.commons.lang.builder.ReflectionToStringBuilder;
 
+import edu.pitt.dbmi.deid.comparison.explanation.Explanation;
+import edu.pitt.dbmi.deid.comparison.util.ConversionUtils;
+
 public class Annotation {
 	
-	private String redactor;
+	private String report = "UNDEFINED";
+	private String redactor = "UNDEFINED";
 	private String annotationKind;
 	private long sPos = -1L;
 	private long ePos = -1L;
-	private String spannedText = null;
+	private String spannedText = "UNDEFINED";
+	private Explanation explanation;
 	
 	public String getRedactor() {
 		return redactor;
@@ -53,10 +58,34 @@ public class Annotation {
 		return new String(redactingChrs);
 	}
 	
+	public String getReport() {
+		return report;
+	}
+	public void setReport(String report) {
+		this.report = report;
+	}
+	public Explanation getExplanation() {
+		return explanation;
+	}
+	public void setExplanation(Explanation explanation) {
+		this.explanation = explanation;
+	}
+	
+	public String getKey() {
+		StringBuilder sb = new StringBuilder();
+		sb.append(report);
+		sb.append(":");
+		sb.append(redactor);
+		sb.append(":");
+		sb.append(ConversionUtils.formatLongAsString(sPos));
+		sb.append(":");
+		sb.append(ConversionUtils.formatLongAsString(ePos));
+		return sb.toString();	
+	}
+	
 	public String toString() {
 	     return ReflectionToStringBuilder.toString(this);
 	 }
-	
-	
+
 
 }

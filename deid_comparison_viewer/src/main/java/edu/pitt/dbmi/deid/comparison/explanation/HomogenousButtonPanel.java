@@ -1,6 +1,5 @@
 package edu.pitt.dbmi.deid.comparison.explanation;
 
-import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -8,7 +7,6 @@ import java.awt.Insets;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JPanel;
 
@@ -22,7 +20,6 @@ public class HomogenousButtonPanel extends JPanel {
 	private double preferredHeight = 0.0d;
 
 	public HomogenousButtonPanel() {
-		setBorder(BorderFactory.createLineBorder(Color.black, 2));
 		GridBagLayout gridBagLayout = new GridBagLayout();
 		setLayout(gridBagLayout);
 	}

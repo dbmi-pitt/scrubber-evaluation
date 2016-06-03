@@ -1,28 +1,25 @@
 package edu.pitt.dbmi.deid.comparison.explanation;
 
 import java.awt.BorderLayout;
-import java.awt.Component;
-import java.awt.Container;
-import java.awt.Dimension;
 import java.awt.Frame;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-import java.awt.GridLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.List;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.net.URLEncoder;
 
 import javax.swing.BorderFactory;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
+import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JList;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.JSplitPane;
 import javax.swing.JTextField;
 import javax.swing.JTextPane;
 import javax.swing.ListModel;
@@ -31,65 +28,54 @@ import javax.swing.border.EtchedBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
+import edu.pitt.dbmi.deid.comparison.annotator.Annotation;
+import edu.pitt.dbmi.deid.comparison.viewer.ExplanationData;
+
 public class ExplanationMgrDialog extends JDialog implements ActionListener, ListSelectionListener {
 
 	private static final long serialVersionUID = 1L;
-	private static ExplanationMgrDialog dialog;
-	private static Explanation value = null;
-
-	private JPanel mainPanel = new JPanel();
-
+	
 	private JPanel contextPanel = new JPanel();
 	private JPanel explanationPanel = new JPanel();
 	private HomogenousButtonPanel mainActionPanel = new HomogenousButtonPanel();
 	private JTextPane contextTextPane = new JTextPane();
 
-	private JTextField explanationHeader = new JTextField();
-	private JList<Explanation> explanationPicker;
-	private JTextPane explanationContent = new JTextPane();
+	private JTextField explanationHeaderTextField = new JTextField();
+
+	private DefaultListModel<Explanation> explanationListModel;
+	private JList<Explanation> explanationList;
+	private JTextPane explanationContentTextPane = new JTextPane();
 	private HomogenousButtonPanel explanationActionPanel = new HomogenousButtonPanel();
+	
+	private JLabel reportNameLabel = new JLabel("report:");
+	private JTextField reportNameField = new JTextField();
+	private JLabel sPosLabel = new JLabel("sPos:");
+	private JTextField sPosTextField = new JTextField();
+	private JLabel ePosLabel = new JLabel("ePos:");
+	private JTextField ePosTextField = new JTextField();
 
 	private JButton saveButton = new JButton("Save");
 	private JButton clearButton = new JButton("Clear");
 	private JButton deleteButton = new JButton("Delete");
 	private JButton selectButton = new JButton("Select");
 	private JButton cancelButton = new JButton("Cancel");
-	
+
 	private int selectedIdx = 0;
-	
 	private Explanation currentExplanation = new Explanation("TBD", "TBD");
-	
-	private String labelText;
-	private Explanation initialValue;
-	private Explanation longValue;
+	private ExplanationData explanationData = null;
 
-	/**
-	 * Set up and show the dialog. The first Component argument determines which
-	 * frame the dialog depends on; it should be a component in the dialog's
-	 * controlling frame. The second Component argument should be null if you
-	 * want the dialog to come up with its left corner in the center of the
-	 * screen; otherwise, it should be the component on top of which the dialog
-	 * should appear.
-	 */
-	public static Explanation showDialog(Component frameComp, Component locationComp, String labelText, String title,
-			Explanation[] possibleValues, Explanation initialValue, Explanation longValue) {
-		Frame frame = JOptionPane.getFrameForComponent(frameComp);
-		dialog = new ExplanationMgrDialog(frame, locationComp, labelText, title, possibleValues, initialValue,
-				longValue);
-		dialog.setVisible(true);
-		return value;
-	}
+	private Annotation currentAnnotation;
 
-	private void setValue(Explanation newValue) {
-		value = newValue;
-		explanationPicker.setSelectedValue(value, true);
-	}
+	public ExplanationMgrDialog(Frame frame, String labelText, boolean isModel, ExplanationData explanationData) {
+		super(frame, labelText, isModel);
 
-	private ExplanationMgrDialog(Frame frame, Component locationComp, String labelText, String title,
-			Explanation[] data, Explanation initialValue, Explanation longValue) {
-		super(frame, title, true);
-
-		setPreferredSize(new Dimension(1200, 700));
+		this.explanationData = explanationData;
+		explanationListModel = new DefaultListModel<Explanation>();
+		for (Explanation explanation : explanationData.asExplanationArray()) {
+			explanationListModel.addElement(explanation);
+		}
+		explanationList = new JList<Explanation>(explanationListModel);
+		setLayout(new BorderLayout());
 
 		/*
 		 * Context
@@ -97,23 +83,80 @@ public class ExplanationMgrDialog extends JDialog implements ActionListener, Lis
 		contextPanel.setBorder(
 				BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED), "Context"));
 		contextPanel.setLayout(new GridBagLayout());
+
 		GridBagConstraints contextGbc = new GridBagConstraints();
+		contextGbc.anchor = GridBagConstraints.NORTHWEST;
+		contextGbc.fill = GridBagConstraints.NONE;
+		contextGbc.weightx = 0.0;
+		contextGbc.weighty = 0.0;
+		contextGbc.gridheight = 1;
+		contextGbc.gridwidth = 1;
+		contextGbc.gridx = 0;
+		contextGbc.gridy = 0;
+		contextGbc.insets = new Insets(5, 5, 5, 5);
+		contextPanel.add(reportNameLabel, contextGbc);
+		
+		contextGbc.gridx = 1;
+		contextGbc.weightx = 1.0;
+		contextGbc.fill = GridBagConstraints.HORIZONTAL;
+		contextPanel.add(reportNameField, contextGbc);
+		
+		contextGbc.gridx = 0;
+		contextGbc.gridy = 1;
+		contextGbc.fill = GridBagConstraints.NONE;
+		contextGbc.weightx = 0.0;
+		contextPanel.add(sPosLabel, contextGbc);
+		
+		contextGbc.gridx = 1;
+		contextGbc.weightx = 1.0;
+		contextGbc.fill = GridBagConstraints.HORIZONTAL;
+		contextPanel.add(sPosTextField, contextGbc);
+		
+		contextGbc.gridx = 0;
+		contextGbc.gridy = 2;
+		contextGbc.fill = GridBagConstraints.NONE;
+		contextGbc.weightx = 0.0;
+		contextPanel.add(ePosLabel, contextGbc);
+		
+		contextGbc.gridx = 1;
+		contextGbc.weightx = 1.0;
+		contextGbc.fill = GridBagConstraints.HORIZONTAL;
+		contextPanel.add(ePosTextField, contextGbc);
+		
 		contextGbc.anchor = GridBagConstraints.NORTHWEST;
 		contextGbc.fill = GridBagConstraints.BOTH;
 		contextGbc.weightx = 1.0;
 		contextGbc.weighty = 1.0;
 		contextGbc.gridheight = 1;
-		contextGbc.gridwidth = 1;
+		contextGbc.gridwidth = 2;
 		contextGbc.gridx = 0;
-		contextGbc.gridy = 0;
-		contextGbc.insets = new Insets(5,5,5,5);
+		contextGbc.gridy = 3;
+		contextGbc.insets = new Insets(5, 5, 5, 5);
 		contextPanel.add(contextTextPane, contextGbc);
+		
+		contextGbc.fill = GridBagConstraints.HORIZONTAL;
+		contextGbc.weighty = 0.0;
+		contextGbc.gridy = 4;
+		contextPanel.add(mainActionPanel, contextGbc);
 
 		/*
 		 * Explanation
 		 */
 		explanationPanel.setBorder(BorderFactory
 				.createTitledBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED), "Explanation"));
+
+		layoutExplanationPanel();
+
+		JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, contextPanel, explanationPanel);
+		splitPane.setOneTouchExpandable(true);
+		splitPane.setDividerLocation(350);
+
+		add(splitPane, BorderLayout.CENTER);
+//		add(mainActionPanel, BorderLayout.PAGE_END);
+	}
+
+	private void layoutExplanationPanel() {
+		
 		explanationPanel.setLayout(new GridBagLayout());
 		GridBagConstraints explanationGbc = new GridBagConstraints();
 		explanationGbc.anchor = GridBagConstraints.WEST;
@@ -122,25 +165,30 @@ public class ExplanationMgrDialog extends JDialog implements ActionListener, Lis
 		explanationGbc.gridy = 0;
 		explanationGbc.gridheight = 1;
 		explanationGbc.gridwidth = 1;
-		explanationGbc.weightx = 1.0;
+		explanationGbc.weightx = 0.5;
 		explanationGbc.weighty = 0.0;
 		explanationGbc.ipadx = 0;
 		explanationGbc.ipady = 0;
 		explanationGbc.insets = new Insets(5, 5, 5, 5);
-		explanationPanel.add(explanationHeader, explanationGbc);
+		explanationPanel.add(explanationHeaderTextField, explanationGbc);
 
 		explanationGbc.gridy = 1;
 		explanationGbc.weighty = 1.0;
 		explanationGbc.fill = GridBagConstraints.BOTH;
-	    explanationPicker = buildExplanationPicker(labelText, data, initialValue, longValue);
-		
-	    explanationPanel.add(explanationPicker, explanationGbc);
+		explanationList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		explanationList.setLayoutOrientation(JList.VERTICAL);
+		explanationList.setSelectedIndex(0);
+		explanationList.addListSelectionListener(this);
+		explanationList.setVisibleRowCount(5);
+		JScrollPane listScrollPane = new JScrollPane(explanationList);
+		explanationPanel.add(listScrollPane, explanationGbc);
 
 		explanationGbc.gridx = 1;
 		explanationGbc.gridy = 0;
 		explanationGbc.gridheight = 2;
-		explanationPanel.add(explanationContent, explanationGbc);
-			
+		JScrollPane contentScrollPane = new JScrollPane(explanationContentTextPane);
+		explanationPanel.add(contentScrollPane, explanationGbc);
+
 		explanationGbc.gridx = 0;
 		explanationGbc.gridy = 2;
 		explanationGbc.gridwidth = 2;
@@ -150,8 +198,9 @@ public class ExplanationMgrDialog extends JDialog implements ActionListener, Lis
 		explanationGbc.fill = GridBagConstraints.HORIZONTAL;
 		explanationPanel.add(explanationActionPanel, explanationGbc);
 
-		explanationPicker = buildExplanationPicker(labelText, data, initialValue, longValue);
-
+		/*
+		 * Explanation actions
+		 */
 		saveButton.addActionListener(this);
 		clearButton.addActionListener(this);
 		deleteButton.addActionListener(this);
@@ -169,108 +218,6 @@ public class ExplanationMgrDialog extends JDialog implements ActionListener, Lis
 		mainActionPanel.addButton(cancelButton);
 		mainActionPanel.layoutButtons();
 
-		/*
-		 * Main panel
-		 */
-		mainPanel.setLayout(new GridLayout(1, 2));
-		mainPanel.add(contextPanel);
-		mainPanel.add(explanationPanel);
-
-		// Put everything together, using the content pane's BorderLayout.
-		Container contentPane = getContentPane();
-		contentPane.add(mainPanel, BorderLayout.CENTER);
-		contentPane.add(mainActionPanel, BorderLayout.PAGE_END);
-
-		// Initialize values.
-		setValue(initialValue);
-		pack();
-		setLocationRelativeTo(locationComp);
-	}
-
-	private JList<Explanation> buildExplanationPicker(String labelText, Explanation[] data, Explanation initialValue,
-			Explanation longValue) {
-		// main part of the dialog
-		JList<Explanation>  explanationPicker = new JList<Explanation>(new ExplanationListModel(data));
-
-		explanationPicker.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-		explanationPicker.setLayoutOrientation(JList.VERTICAL);
-		explanationPicker.setVisibleRowCount(-1);
-		explanationPicker.addListSelectionListener(this);
-		JScrollPane listScroller = new JScrollPane(explanationPicker);
-		listScroller.setPreferredSize(new Dimension(250, 80));
-		listScroller.setAlignmentX(LEFT_ALIGNMENT);
-
-		// Create a container so that we can add a title around
-		// the scroll pane. Can't add a title directly to the
-		// scroll pane because its background would be white.
-		// Lay out the label and scroll pane from top to bottom.
-		JPanel listPane = new JPanel();
-		listPane.setLayout(new BoxLayout(listPane, BoxLayout.PAGE_AXIS));
-		JLabel label = new JLabel(labelText);
-		label.setLabelFor(explanationPicker);
-		listPane.add(label);
-		listPane.add(Box.createRigidArea(new Dimension(0, 5)));
-		listPane.add(listScroller);
-		listPane.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-
-		return explanationPicker;
-	}
-
-	// Handle clicks on the Set and Cancel buttons.
-	public void actionPerformed(ActionEvent e) {
-		if ("Save".equals(e.getActionCommand())) {
-			String currentHeader = explanationHeader.getText();
-			String currentContent = explanationContent.getText();
-			currentExplanation = new Explanation(currentHeader, currentContent);
-			if (checkUnique(currentExplanation)) {
-				processSave();			
-			}
-		}
-		else if ("Clear".equals(e.getActionCommand())) {
-			explanationPicker.removeListSelectionListener(this);
-			explanationHeader.setText("");
-			explanationContent.setText("");
-			explanationPicker.clearSelection();
-			explanationPicker.addListSelectionListener(this);
-			selectedIdx = 0;
-			
-		}
-		else if ("Select".equals(e.getActionCommand())) {
-			ExplanationMgrDialog.dialog.setVisible(false);
-		}
-		else if ("Cancel".equals(e.getActionCommand())) {
-			ExplanationMgrDialog.dialog.setVisible(false);
-		}
-		
-	}
-	
-	private void processSave() {
-		explanationPicker.clearSelection();
-		ExplanationListModel model = (ExplanationListModel) explanationPicker.getModel();
-		model.addExplanation(currentExplanation);
-		repaint();
-	}
-	
-	private Explanation[] explanationListToArray(List<Explanation> explanationList) {
-		final Explanation[] sortedExplanations = new Explanation[explanationList.size()];
-		int idx = 0;
-		for (Explanation explanation : explanationList) {
-			sortedExplanations[idx++] = explanation;
-		}
-		return sortedExplanations;
-	}
-	
-	private boolean checkUnique(Explanation insertionCandidate) {
-		boolean isUnique = true;
-		ListModel<Explanation> model = explanationPicker.getModel();
-		for (int idx = 0; idx < model.getSize(); idx++) {
-			Explanation existingExplanation = explanationPicker.getModel().getElementAt(idx);
-			if (existingExplanation.getHeader().equals(insertionCandidate.getHeader())) {
-				isUnique = false;
-				break;
-			}
-		}
-		return isUnique;
 	}
 
 	@Override
@@ -281,17 +228,177 @@ public class ExplanationMgrDialog extends JDialog implements ActionListener, Lis
 			int lastIndex = selectEvent.getLastIndex();
 			if (firstIndex != selectedIdx) {
 				selectedIdx = firstIndex;
-			}
-			else if (lastIndex != selectedIdx) {
+			} else if (lastIndex != selectedIdx) {
 				selectedIdx = lastIndex;
 			}
-			currentExplanation = explanationPicker.getModel().getElementAt(selectedIdx);
+			currentExplanation = explanationList.getModel().getElementAt(selectedIdx);
 			if (currentExplanation != null) {
-				explanationHeader.setText(currentExplanation.getHeader());
-				explanationContent.setText(currentExplanation.getContent());
+				explanationHeaderTextField.setText(currentExplanation.getHeader());
+				explanationContentTextPane.setText(urlDecode(currentExplanation.getContent()));
 			}
 		}
+
+	}
+
+	@Override
+	public void actionPerformed(ActionEvent e) {
+		if ("Save".equals(e.getActionCommand())) {
+			processSave();
+		} else if ("Clear".equals(e.getActionCommand())) {
+			processClear();
+		} else if ("Delete".equals(e.getActionCommand())) {
+			processDelete();
+		} else if ("Select".equals(e.getActionCommand())) {
+			processSelect();
+		} else if ("Cancel".equals(e.getActionCommand())) {
+			setVisible(false);
+		}
+
+	}
+
+	private void processSelect() {
+		Explanation selectedExplanation = explanationList.getSelectedValue();
+		if (selectedExplanation != null) {
+			currentAnnotation.setExplanation(selectedExplanation);
+		}
+		setVisible(false);
+	}
+
+	private void processClear() {
+		explanationList.removeListSelectionListener(this);
+		int size = explanationListModel.getSize();
+		if (size > 0) {
+			explanationHeaderTextField.setText("");
+			explanationContentTextPane.setText("");
+			explanationList.clearSelection();
+		}
+		explanationList.addListSelectionListener(this);
+		selectedIdx = -1;
+	}
+
+	private void processSave() {
+//		explanationList.removeListSelectionListener(this);
+		int index = explanationList.getSelectedIndex(); // get selected index
+		if (index == -1) { // no selection, so insert at beginning
+			processInsert();
+		} else { // add after the selected item
+			processUpdate();
+		}
+//		explanationList.addListSelectionListener(this);
+	}
+
+	private void processUpdate() {
+		int index = explanationList.getSelectedIndex();
+		Explanation explanationToUpdate = explanationListModel.getElementAt(index);
+		if (explanationToUpdate.getHeader().equals(explanationHeaderTextField.getText())) {
+			explanationToUpdate.setContent(urlEncode(explanationContentTextPane.getText()));
+		}
+	}
+
+	private String urlEncode(String text) {
+		String result = null;
+		try {
+			result = URLEncoder.encode(text, "utf-8");
+		} catch (UnsupportedEncodingException e) {
+			e.printStackTrace();
+			result = "URL Encoding failed";
+		}
+		return result;
+	}
 	
+	private String urlDecode(String text) {
+		String result = null;
+		try {
+			result = URLDecoder.decode(text, "utf-8");
+		} catch (UnsupportedEncodingException e) {
+			e.printStackTrace();
+			result = "URL Encoding failed";
+		}
+		return result;
+	}
+
+	private void processInsert() {
+		Explanation explanationToInsert = new Explanation(explanationHeaderTextField.getText(), urlEncode(explanationContentTextPane.getText()));
+		if (isValidHeader(explanationToInsert) && checkUnique(explanationToInsert)) {
+			explanationListModel.insertElementAt(explanationToInsert, 0);
+			explanationData.getExplanationMap().put(explanationToInsert.getHeader(), explanationToInsert);
+
+			// Reset the text field.
+			explanationHeaderTextField.requestFocusInWindow();
+			explanationHeaderTextField.setText("");
+			explanationContentTextPane.setText("");
+
+			// Select the new item and make it visible.
+			explanationList.setSelectedIndex(0);
+			explanationList.ensureIndexIsVisible(0);
+		}
+		
+	}
+	
+	private boolean isValidHeader(Explanation insertionCandidate) {
+		return insertionCandidate.getHeader().length() > 0;
+	}
+
+	private void processDelete() {
+		explanationList.removeListSelectionListener(this);
+		int index = explanationList.getSelectedIndex();
+		explanationListModel.remove(index);
+
+		int size = explanationListModel.getSize();
+
+		if (size == 0) { // Nobody's left, disable firing.
+			deleteButton.setEnabled(false);
+			explanationHeaderTextField.setText("");
+			explanationContentTextPane.setText("");
+		} else { // Select an index.
+			if (index == explanationListModel.getSize()) {
+				// removed item in last position
+				index--;
+			}
+
+			explanationList.setSelectedIndex(index);
+			explanationList.ensureIndexIsVisible(index);
+		}
+		explanationList.addListSelectionListener(this);
+	}
+
+	private boolean checkUnique(Explanation insertionCandidate) {
+		boolean isUnique = true;
+		ListModel<Explanation> model = explanationList.getModel();
+		for (int idx = 0; idx < model.getSize(); idx++) {
+			Explanation existingExplanation = explanationList.getModel().getElementAt(idx);
+			if (existingExplanation.getHeader().equals(insertionCandidate.getHeader())) {
+				isUnique = false;
+				break;
+			}
+		}
+		return isUnique;
+	}
+	
+	public void setCurrentAnnotation(Annotation annotation) {
+		currentAnnotation = annotation;
+		reportNameField.setText(currentAnnotation.getReport());
+		sPosTextField.setText(currentAnnotation.getsPos()+"");
+		ePosTextField.setText(currentAnnotation.getePos()+"");
+		contextTextPane.setText(currentAnnotation.getSpannedText());
+		int explanationIndex = 0;
+		if (currentAnnotation.getExplanation() != null) {
+			while (explanationIndex < explanationListModel.size()) {
+				Explanation explanation = explanationListModel.getElementAt(explanationIndex);
+				if (explanation.getHeader().equals(currentAnnotation.getExplanation().getHeader())) {
+					break;
+				}
+				else {
+					explanationIndex++;
+				}
+			}	
+			explanationList.setSelectedIndex(explanationIndex);
+		}
+		else {
+			explanationList.clearSelection();
+			explanationHeaderTextField.setText("");
+			explanationContentTextPane.setText("");
+		}
 	}
 
 }
